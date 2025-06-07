@@ -16,6 +16,7 @@ Extract (from API)
 
 Load into Kafka Topic
 → Raw, possibly noisy text is streamed into Kafka
+→ Create kafka topic 
 
 Kafka Consumer with PySpark Streaming
 → Read data in real-time from Kafka
@@ -30,12 +31,12 @@ Send to Elasticsearch
 → Store results for analytics and visualization in Kibana/Superset
 
 
-youtube-sentiment-pipeline/
-│
-├── docker-compose.yml
-├── kafka/
-│   └── producer.py  # YouTube API to Kafka
-│
+youtube-sentiment-pipeline/ <br>
+│ <br>
+├── docker-compose.yml <br>
+├── kafka/ <br>
+│   └── producer.py  # YouTube API to Kafka <br>
+│ <br>
 ├── spark/
 │   └── spark_job.py  # NLP + ML processing
 │
