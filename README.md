@@ -1,3 +1,17 @@
+# Steps to Run
+docker-compose up -d
+If need to debug or test quickly, run parts outside Docker temporarily, but use Docker for integration
+
+- In your terminal
+docker-compose up -d
+docker exec -it yrtsa-spark-1 bash
+
+- Inside the Spark container
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:4.0.0 /app/kafka-spark.py (copy, right-click)
+
+- In terminal 
+python producer.py
+
 # Real-Time-Sentiment-Analysis
 
 YouTube API → Kafka Producer → Kafka Topic → Spark Streaming Consumer → NLP Sentiment Model → Elasticsearch/Druid → Dashboard (e.g., Kibana or Superset)
