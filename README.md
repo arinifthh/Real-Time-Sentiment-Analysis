@@ -1,17 +1,3 @@
-# Steps to Run
-docker-compose up -d
-If need to debug or test quickly, run parts outside Docker temporarily, but use Docker for integration
-
-- In your terminal
-docker-compose up -d
-docker exec -it yrtsa-spark-1 bash
-
-- Inside the Spark container
-spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:4.0.0 /app/kafka-spark.py (copy, right-click)
-
-- In terminal 
-python producer.py
-
 # Real-Time-Sentiment-Analysis
 
 YouTube API → Kafka Producer → Kafka Topic → Spark Streaming Consumer → NLP Sentiment Model → Elasticsearch/Druid → Dashboard (e.g., Kibana or Superset)
@@ -196,15 +182,77 @@ python producer.py
 
 You’ll see the JSON records printed to the console by `kafka-spark.py`.
 
-### Full Architecture Flow (No Docker)
-✅ producer.py sends YouTube comment JSON to Kafka topic youtube_sentiment
+Great initiative! Here's an improved and more **detailed architecture flow (No Docker)**, with **clarity on where the Kafka Consumer fits in**, especially for **manual cleaning or debugging**:
 
-✅ Kafka stores and streams these messages
+---
 
-🧠 PySpark reads this topic using spark.readStream
+## 📊 Full Architecture Flow 
 
-🧼 PySpark cleans + transforms + classifies (if you're re-predicting sentiment)
+### 1. 📝 `producer.py` – Data Ingestion
 
-📤 PySpark sends results to Elasticsearch (using REST or Spark connector)
+* Reads the `youtube_comments.csv` file (or real-time API in future).
+* Converts each row to JSON.
+* Sends the data to **Kafka topic: `youtube_sentiment`**.
+* ✅ You are doing this step successfully now.
 
-📊 Kibana visualizes sentiment trend over time (e.g., positive % by hour)
+---
+
+### 2. 📡 Apache Kafka – Message Broker
+
+* Acts as a **buffer and pipeline**.
+* Stores and streams data from **producers** to **consumers**.
+* Topic: `youtube_sentiment`
+* Kafka ensures **high-throughput**, **fault-tolerant** delivery of real-time messages.
+
+---
+
+### 3. 🧪 `consumer_cleaner.py` – (Optional) Kafka Consumer for Pre-Cleaning or Monitoring
+
+> 🧼 **This script is optional** and mostly for:
+
+* Debugging: See what's coming in real-time.
+* Cleaning only: Preprocess before handing to Spark.
+* Educational purpose: Show raw → cleaned data.
+
+If you're using **PySpark to do all transformations**, this consumer isn't required in production.
+
+✅ This fits **between Step 2 and 4** if you need manual inspection.
+
+---
+
+### 4. ⚡ PySpark – Real-Time Data Processing
+
+```python
+spark.readStream \
+  .format("kafka") \
+  .option("subscribe", "youtube_sentiment") \
+```
+
+* Spark reads **Kafka topic: `youtube_sentiment`**.
+* Steps handled:
+
+  * Deserialize the JSON
+  * 🔡 Clean text (lowercase, remove stopwords, etc.)
+  * 🤖 Optionally reclassify sentiment using an ML model
+* Spark DataFrame becomes real-time mini-pipeline.
+
+---
+
+### 5. 📤 Spark Output to Elasticsearch
+
+* Transformed + classified records are sent to:
+
+  * **Elasticsearch (via REST or Spark connector)**.
+  * Index: `youtube_cleaned_comments` or similar.
+
+---
+
+### 6. 📈 Kibana – Sentiment Visualization Dashboard
+
+* Kibana connects to Elasticsearch.
+* Visualizes:
+
+  * 🔼 Positive/Negative/Neutral over time (line graph)
+  * 📌 Sentiment by keyword/topic
+  * 🔍 Filter by hour/date/keyword
+* You’ll create time-based aggregations on `published_at` or `processed_at`.
